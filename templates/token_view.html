@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Decoded Token Claims</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+<div class="container">
+    <div class="heading-container">
+        <h1 class="heading-text">OIDC Token Claims</h1>
+        <a href="/" class="logout-btn">Logout</a>
+    </div>
+
+    {% if token %}
+    <table>
+        <thead>
+        <tr>
+            <th>Claim</th>
+            <th>Value</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for key, value in token.items() %}
+        <tr>
+            <td>{{ key }}</td>
+            <td>
+                {% if value is mapping %}
+                <pre>{{ value | tojson(indent=2) }}</pre>
+                {% elif value is sequence and not value is string %}
+                <pre>{{ value | tojson(indent=2) }}</pre>
+                {% else %}
+                {{ value }}
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No token data available.</p>
+    {% endif %}
+</div>
+</body>
+</html>

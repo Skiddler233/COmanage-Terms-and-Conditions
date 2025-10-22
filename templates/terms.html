@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Terms and Conditions</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+<div class="container">
+    <h2 class="heading-text">Hello {{ name }}</h2>
+    <p>Please review and accept the <strong>GUARDIANS Acceptable Use Policy</strong> to continue.</p>
+
+    <!-- Injected Terms and Conditions -->
+    <div class="terms-box">
+        {{ terms_html|safe }}
+    </div>
+
+    <form action="{{ url_for('accept_terms') }}" method="POST">
+        <button type="submit" class="login-btn">Accept Terms and Conditions</button>
+    </form>
+</div>
+</body>
+</html>

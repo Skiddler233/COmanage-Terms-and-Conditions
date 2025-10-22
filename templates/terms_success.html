@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Terms Accepted</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+<div class="container">
+    <h2 class="heading-text">Thank you, {{ name }}!</h2>
+    <p>You have successfully accepted the <strong>GUARDIANS Acceptable Use Policy</strong>.</p>
+    <a href="/token_view" class="login-btn">View Token</a>
+</div>
+</body>
+</html>
