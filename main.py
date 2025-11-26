@@ -6,6 +6,8 @@ import dotenv
 from flask import Flask, session, render_template, request, redirect, url_for, jsonify
 from authlib.integrations.flask_client import OAuth
 from authlib.jose import jwt, JsonWebKey
+from urllib.parse import quote
+import base64
 
 app = Flask(__name__)
 dotenv.load_dotenv()
@@ -16,7 +18,14 @@ CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 REDIRECT_URI = os.getenv("REDIRECT_URI")
 TOKEN_ENDPOINT = os.getenv("TOKEN_ENDPOINT")
 DISCOVERY_URL = os.getenv("DISCOVERY_URL")
-TERMS_URL = "https://registry-dev.biocommons.org.au/registry/CoTermsAndConditions/display/4"
+TERMS_URL = os.getenv("TERMS_URL")
+
+API_USER = os.getenv("GUARDIANS_DEV_API_USER")
+API_KEY = os.getenv("GUARDIANS_DEV_API_KEY")
+AUTH = f"{API_USER}:{API_KEY}"
+AUTH_ENCODED = base64.b64encode(AUTH.encode()).decode()
+API_AUTH = f"Basic {AUTH_ENCODED}"
+API_URL = os.getenv("GUARDIANS_DEV_URL_BASE")
 
 oauth = OAuth(app)
 
@@ -42,11 +51,19 @@ def login():
     session['nonce'] = nonce
     return oidc.authorize_redirect(REDIRECT_URI, nonce=nonce)
 
+@app.route('/login_demo')
+def login_demo():
+    nonce = str(uuid.uuid4())
+    session['nonce'] = nonce
+    session['skip_terms'] = True  # Flag to bypass T&C check
+    return oidc.authorize_redirect(REDIRECT_URI, nonce=nonce)
+
+
 def decode_id_token(id_token, jwks_uri):
     jwks = requests.get(jwks_uri).json()
     key_set = JsonWebKey.import_key_set(jwks)
     claims = jwt.decode(id_token, key_set)
-    claims.validate()
+    claims.validate(leeway=10)
     return dict(claims)
 
 @app.route('/authenticate')
@@ -64,7 +81,11 @@ def authenticate():
 
     session['user'] = decoded_token
 
-    # Terms check logic
+    # Skip T&C check if demo login was used
+    if session.pop('skip_terms', False):
+        return redirect(url_for('token_view'))
+
+    # Normal T&C check
     terms = decoded_token.get('terms_and_conditions', [])
     for item in terms:
         if item.get('name') == 'GUARDIANS Acceptable Use Policy':
@@ -90,8 +111,44 @@ def terms():
 @app.route('/terms/accept', methods=['POST'])
 def accept_terms():
     user = session.get('user', {})
-    user['terms_and_conditions'] = [{'name': 'GUARDIANS Acceptable Use Policy', 'agreed': True}]
-    session['user'] = user
+    OIDC_SUB = user.get('sub')
+    print (OIDC_SUB)
+
+    ENCODED_OIDC_SUB = quote(OIDC_SUB, safe='')
+    headers = {
+        "Authorization": f"{API_AUTH}",
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+    }
+
+    co_person_record = requests.get(f"{API_URL}/co_people.json?coid=6&search.identifier={ENCODED_OIDC_SUB}", headers=headers)
+    print(co_person_record.text)
+    print(co_person_record.status_code)
+
+    terms_and_conditions = requests.get(f"{API_URL}/co_t_and_c_agreements.json?coid=6", headers=headers)
+    print(terms_and_conditions.text)
+    print(terms_and_conditions.status_code)
+
+
+    json_data = json.loads(co_person_record.text)
+    CO_PERSON_ID = json_data['CoPeople'][0]['Id']
+    print(CO_PERSON_ID)
+
+    new_agreement = {
+        "RequestType": "CoTAndCAgreements",
+        "Version": "1.0",
+        "CoTAndCAgreements": [
+            {
+                "Version": "1.0",
+                "CoTermsAndConditionsId": 4,
+                "Person": {"Type": "CO", "Id": CO_PERSON_ID}
+            }
+        ]
+    }
+    terms_and_conditions_response = requests.post(f"{API_URL}/co_t_and_c_agreements.json", headers=headers, data=json.dumps(new_agreement))
+    print(terms_and_conditions_response.text)
+    print(terms_and_conditions_response.status_code)
+
     return redirect(url_for('terms_success'))
 
 @app.route('/terms/success')
