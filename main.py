@@ -164,5 +164,11 @@ def token_view():
         return "No token found in session", 401
     return render_template('token_view.html', token=decoded_token)
 
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('index'))
+
+
 if __name__ == '__main__':
     app.run(debug=True)
