@@ -3,7 +3,7 @@ import uuid
 import json
 import requests
 import dotenv
-from flask import Flask, session, render_template, request, redirect, url_for, jsonify
+from flask import Flask, session, render_template, request, redirect, url_for, jsonify, abort
 from authlib.integrations.flask_client import OAuth
 from authlib.jose import jwt, JsonWebKey
 from urllib.parse import quote
@@ -41,6 +41,22 @@ oidc = oauth.register(
     }
 )
 
+RELEVENT_CLAIMS = [
+    "sub", "email", "eppn", "eptid",  "family_name", "given_name",
+    "idp_name", "isMemberOf", "iss", "jti", "nonce", "auth_time",
+    "exp", "acr", "aud", "nbf", "idp", "affilliation", "iat"
+]
+KNOWN_CLAIMS = [
+    "sub", "email", "eppn", "eptid",  "family_name", "given_name",
+    "idp_name", "isMemberOf", "iss", "jti", "nonce", "auth_time",
+    "exp", "acr", "aud", "nbf", "idp", "affilliation", "iat"
+    "eduperson_targeted_id", "aueduperson_shared_token",
+    "home_organization", "home_organization_type", "mobile",
+    "name","eduperson_affiliation", "eduperson_scoped_affiliation",
+    "nickname","organization_name", "idp_entityid", "OIDC_access_token",
+    "OIDC_access_token_expires", "cert_subject_dn", "uid"
+]
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -65,6 +81,23 @@ def decode_id_token(id_token, jwks_uri):
     claims = jwt.decode(id_token, key_set)
     claims.validate(leeway=10)
     return dict(claims)
+
+def build_claim_view(token: dict, mode: str) -> dict:
+    if mode == "short":
+        return {
+            k: token[k]
+            for k in RELEVENT_CLAIMS
+            if k in token
+        }
+    if mode == "full":
+        return dict(token.items())
+    if mode == "all":
+        all_claims = KNOWN_CLAIMS | token.keys()
+        return {
+            k: token.get(k, "No Value")
+            for k in all_claims
+        }
+    abort(400)
 
 @app.route('/authenticate')
 def authenticate():
