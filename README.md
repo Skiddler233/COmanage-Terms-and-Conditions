@@ -20,9 +20,9 @@ In the root directory, create a `.env` file with the following configuration:
     APP_SESSION_SECRET=<any random secret, only stored here>
 
 ### API User Creation
-    Create a API user and CORE API in the registry.
-    Setup instructions please see "https://spaces.at.internet2.edu/spaces/COmanage/pages/25860703/CoPerson+API"
-    Add the details to the `.env` example below. 
+Create a API user and CORE API in the registry.\
+Setup instructions please see "https://spaces.at.internet2.edu/spaces/COmanage/pages/25860703/CoPerson+API"\
+Add the details to the `.env`. Example below. 
 
 #### OIDC Client Configuration  
 You can store multiple client configurations in the `.env` file.  
@@ -48,7 +48,7 @@ DISCOVERY_URL=https://<your client URL>/.well-known/openid-configuration
 URL_BASE="https://<your client url>/registry"
 API_USER="<your API user username>"
 API_KEY="<your API user key>"
-TERMS_URL="https://<you client url>/registry/CoTermsAndConditions/display/<your terms and conditions version number e.g. 5>"
+TERMS_URL="https://<you client url>/registry/CoTermsAndConditions/display/<your terms version number e.g. 5>"
 
 ```
 
