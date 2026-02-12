@@ -20,8 +20,10 @@ In the root directory, create a `.env` file with the following configuration:
     APP_SESSION_SECRET=<any random secret, only stored here>
 
 ### API User Creation
-Create a API user and CORE API in the registry.\
-Setup instructions please see "https://spaces.at.internet2.edu/spaces/COmanage/pages/25860703/CoPerson+API"\
+Create a API user and CORE API in the registry.
+
+Setup instructions please see "https://spaces.at.internet2.edu/spaces/COmanage/pages/25860703/CoPerson+API"
+
 Add the details to the `.env`. Example below. 
 
 #### OIDC Client Configuration  
